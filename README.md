@@ -5,9 +5,9 @@ Next.js 기반 PM2 로그 수집/분석 대시보드입니다. 프로젝트에 P
 ## Setup
 
 ```bash
-npm install
-npm run db:init
-npm run build
+pnpm install
+pnpm run db:init
+pnpm run build
 pm2 start ecosystem.config.cjs
 pm2 save
 ```
