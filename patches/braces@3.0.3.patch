@@ -1,0 +1,69 @@
+diff --git a/lib/compile.js b/lib/compile.js
+--- a/lib/compile.js
++++ b/lib/compile.js
+@@ -4,7 +4,9 @@
+ const utils = require('./utils');
+ 
+ const compile = (ast, options = {}) => {
+-  const walk = (node, parent = {}) => {
++  const walk = (node, parent = {}, depth = 0) => {
++    // Bound recursive AST traversal (CVE-2026-93687).
++    if (depth > 128) throw new SyntaxError("Brace nesting exceeds safe depth");
+     const invalidBlock = utils.isInvalidBrace(parent);
+     const invalidNode = node.invalid === true && options.escapeInvalid === true;
+     const invalid = invalidBlock === true || invalidNode === true;
+@@ -47,7 +49,7 @@
+ 
+     if (node.nodes) {
+       for (const child of node.nodes) {
+-        output += walk(child, node);
++        output += walk(child, node, depth + 1);
+       }
+     }
+ 
+diff --git a/lib/expand.js b/lib/expand.js
+--- a/lib/expand.js
++++ b/lib/expand.js
+@@ -33,7 +33,9 @@
+ const expand = (ast, options = {}) => {
+   const rangeLimit = options.rangeLimit === undefined ? 1000 : options.rangeLimit;
+ 
+-  const walk = (node, parent = {}) => {
++  const walk = (node, parent = {}, depth = 0) => {
++    // Bound recursive AST traversal (CVE-2026-93687).
++    if (depth > 128) throw new SyntaxError("Brace nesting exceeds safe depth");
+     node.queue = [];
+ 
+     let p = parent;
+@@ -100,7 +102,7 @@
+       }
+ 
+       if (child.nodes) {
+-        walk(child, node);
++        walk(child, node, depth + 1);
+       }
+     }
+ 
+diff --git a/lib/stringify.js b/lib/stringify.js
+--- a/lib/stringify.js
++++ b/lib/stringify.js
+@@ -3,7 +3,9 @@
+ const utils = require('./utils');
+ 
+ module.exports = (ast, options = {}) => {
+-  const stringify = (node, parent = {}) => {
++  const stringify = (node, parent = {}, depth = 0) => {
++    // Bound recursive AST traversal (CVE-2026-93687).
++    if (depth > 128) throw new SyntaxError("Brace nesting exceeds safe depth");
+     const invalidBlock = options.escapeInvalid && utils.isInvalidBrace(parent);
+     const invalidNode = node.invalid === true && options.escapeInvalid === true;
+     let output = '';
+@@ -21,7 +23,7 @@
+ 
+     if (node.nodes) {
+       for (const child of node.nodes) {
+-        output += stringify(child);
++        output += stringify(child, node, depth + 1);
+       }
+     }
+     return output;
